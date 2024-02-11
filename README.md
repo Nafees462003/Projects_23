@@ -1,6 +1,6 @@
--  Hi, I’m @Nafees462003
+- Hi, I’m @Nafees462003
 - I’m interested in Robotics_Microcontrollers_3d printers_drone
-- I’m currently learning Microcontroller
+- All my project codes are in the repositories below
 
 
 
