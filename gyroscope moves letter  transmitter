@@ -1,0 +1,129 @@
+// 6 Channel Transmitter | 6 Kanal Verici
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7735.h>
+  #include <SPI.h>
+  #include <nRF24L01.h>
+  #include <RF24.h>
+  #include <Adafruit_MPU6050.h>
+#include <Adafruit_Sensor.h>
+#include <Wire.h>
+
+#define TFT_CS    7 // scl 13 sda 11
+#define TFT_RST   6
+#define TFT_DC    8
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+Adafruit_MPU6050 srituhobby;
+
+const int switchPin1 = 2;
+const int switchPin2 = 3;
+
+  const uint64_t pipeOut = 0xE9E8F0F0E1LL;   //IMPORTANT: The same as in the receiver 0xE9E8F0F0E1LL | Bu adres alıcı ile aynı olmalı
+  RF24 radio(9, 10); // select CE,CSN pin | CE ve CSN pinlerin seçimi
+  struct Signal {
+  byte throttle;
+  byte pitch;
+  byte roll;
+  byte yaw;
+ 
+   byte  valuex;  // New field for accelerometer X-axis data
+   byte valuey;
+};
+  Signal data;
+
+
+  void ResetData() 
+{
+  data.throttle = 12;   // Motor stop | Motor Kapalı (Signal lost position | sinyal kesildiğindeki pozisyon)
+  data.pitch = 127;    // Center | Merkez (Signal lost position | sinyal kesildiğindeki pozisyon)
+  data.roll = 127;     // Center | merkez (Signal lost position | sinyal kesildiğindeki pozisyon)
+  data.yaw = 127;     // Center | merkez (Signal lost position | sinyal kesildiğindeki pozisyon)
+ 
+}
+  void setup()
+{
+  
+ tft.initR(INITR_GREENTAB);
+  tft.setRotation(3);
+  tft.invertDisplay(true);
+  //Start everything up
+pinMode(switchPin1, INPUT_PULLUP);
+pinMode(switchPin2, INPUT_PULLUP);
+  Serial.begin(115200);
+ 
+  Wire.begin();
+  srituhobby.begin();
+  
+
+  srituhobby.setAccelerometerRange(MPU6050_RANGE_8_G);//2_G,4_G,8_G,16_G
+  srituhobby.setGyroRange(MPU6050_RANGE_500_DEG);//250,500,1000,2000
+  srituhobby.setFilterBandwidth(MPU6050_BAND_44_HZ);
+
+  delay(100);
+  
+  radio.begin();
+  radio.openWritingPipe(pipeOut);
+  radio.setAutoAck(false);
+  radio.setDataRate(RF24_250KBPS);
+  radio.setPALevel(RF24_PA_HIGH);
+  radio.stopListening(); //start the radio comunication for Transmitter | Verici olarak sinyal iletişimi başlatılıyor
+  ResetData();
+ 
+}
+  // Joystick center and its borders | Joystick merkez ve sınırları
+  int mapJoystickValues(int val, int lower, int middle, int upper, bool reverse)
+{
+  val = constrain(val, lower, upper);
+  if ( val < middle )
+  val = map(val, lower, middle, 0, 128);
+  else
+  val = map(val, middle, upper, 128, 255);
+  return ( reverse ? 255 - val : val );
+}
+  void loop(){
+
+ sensors_event_t a, g, temp;
+  srituhobby.getEvent(&a, &g, &temp);
+
+  int valuey = a.acceleration.y;
+  int valuex = a.acceleration.z;
+
+  valuey = map(valuey,  -8, 8, -35, 35);
+  valuex = map(valuex,  -8, 8, -35, 35);
+
+
+  // Map the potentiometer value to the column position
+  int columnPosition = map(valuey, -35, 35,tft.width() ,0  );
+ int columnPosition2 = map(valuex, -30, 30,  0 ,tft.height());
+  // Clear the screen
+  tft.fillScreen(ST7735_BLACK); 
+      tft.setTextColor(ST7735_MAGENTA);
+      
+  // Set the text size
+  tft.setTextSize(2);
+
+  // Set the cursor position based on the potentiometer
+  tft.setCursor(columnPosition,columnPosition2);
+
+  // Display your text
+  tft.print("0" );
+
+  // Delay for stability
+  
+   Serial.println(valuex);
+    Serial.println(valuey);
+ 
+  // Control Stick Calibration | Kumanda Kol Kalibrasyonları
+  // Setting may be required for the correct values of the control levers. | :Kontrol kolların doğru değerleri için ayar gerekebilir.
+  data.throttle = mapJoystickValues( analogRead(A0), 12, 524, 1020, true );  // "true" or "false" for signal direction | "true" veya "false" sinyal yönünü belirler
+  data.roll = mapJoystickValues( analogRead(A1), 12, 524, 1020, true );      // "true" or "false" for servo direction | "true" veya "false" servo yönünü belirler
+  data.pitch = mapJoystickValues( analogRead(A2), 12, 524, 1020, false );     // "true" or "false" for servo direction | "true" veya "false" servo yönünü belirler
+  data.yaw = mapJoystickValues( analogRead(A3), 12, 524, 1020, false );       // "true" or "false" for servo direction | "true" veya "false" servo yönünü belirler
+
+ 
+  data.valuex= map(a.acceleration.z, -8, 8, 0, 255);
+  data.valuey = map(a.acceleration.y, -8, 8, 0, 255);  // "true" or "false" for servo direction | "true" veya "false" servo yönünü belirler
+  radio.write(&data, sizeof(Signal));
+  Serial.println(data.valuey);
+  delay(50);
+  
+}
