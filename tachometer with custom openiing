@@ -1,0 +1,105 @@
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7735.h>
+#include <SPI.h>
+
+// Pin configuration for your setup
+#define TFT_CS    10 // scl 13 sda 11
+#define TFT_RST   9
+#define TFT_DC    8
+
+// Initialize the display
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+
+// Potentiometer pin
+int potPin = A0;
+int potPin2 = A1;
+
+// RPM Meter using Arduino and IR Sensor
+
+const int irSensorPin = 2;  // Connect the signal pin of the IR sensor to digital pin 2
+
+volatile unsigned int pulseCount = 0;  // Variable to store the count of pulses
+volatile unsigned long lastTime = 0;
+
+void setup() {
+  // Initialize serial communication for debugging
+  Serial.begin(9600);
+
+  // Initialize display
+  tft.initR(INITR_GREENTAB);
+  tft.setRotation(3);
+  tft.invertDisplay(true); 
+    // Adjust the rotation if needed
+   pinMode(irSensorPin, INPUT);
+  
+  attachInterrupt(digitalPinToInterrupt(irSensorPin), countPulse, FALLING);
+}
+
+enum DisplayState {
+  WELCOME,
+  RPM_COUNT
+};
+
+DisplayState currentState = WELCOME;
+
+void loop() {
+  int potValue = analogRead(potPin);
+  int potValue2 = analogRead(potPin2);
+
+  // Map the potentiometer value to the column position
+  int columnPosition = map(potValue, 0, 1023, 0, tft.width());
+  int columnPosition2 = map(potValue2, 0, 1023, 0, tft.height());
+
+  unsigned long currentTime = millis();
+
+  switch (currentState) {
+    case WELCOME:
+      // Display welcome message
+      tft.fillScreen(ST7735_WHITE);
+      tft.setTextColor(ST7735_ORANGE);
+      tft.setTextSize(3);
+      tft.setCursor(12, 40);
+      tft.print("WELCOME!");
+      tft.setCursor(25, 70);
+       tft.print("NAFEES");
+      delay(4000); // Display the welcome message for 2 seconds
+      currentState = RPM_COUNT; // Switch to RPM counting state
+      break;
+
+    case RPM_COUNT:
+      if (currentTime - lastTime >=500) {
+        float rpm = (float)pulseCount * 60.0 / 20.0;  // Adjust the constant based on your sensor
+        Serial.print("RPM: ");
+        Serial.println(rpm);
+
+        // Clear the screen
+        tft.fillScreen(ST7735_BLACK);
+
+        // Set the text color
+        tft.setTextColor(tft.color565(94, 196, 86 ));
+
+        // Set the text size
+        tft.setTextSize(3);
+
+        // Set the cursor position based on the potentiometer
+        tft.setCursor(columnPosition, columnPosition2);
+
+        // Display your text
+        tft.print("RPM:");
+         tft.setCursor(columnPosition, 40+columnPosition2);
+        tft.print(rpm);
+
+        // Delay for stability
+        delay(.0000001);
+
+        pulseCount = 0;      // Reset pulse count
+        lastTime = currentTime;  // Update last time
+      }
+      break;
+  }
+}
+
+void countPulse() {
+  // This function is called whenever there is a falling edge on the IR sensor pin
+  pulseCount++;
+}
