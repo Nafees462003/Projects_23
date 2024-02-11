@@ -1,0 +1,107 @@
+
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7735.h>
+#include <SPI.h>
+
+
+#define TFT_CS    7// scl 13 sda 11
+#define TFT_RST   6
+#define TFT_DC    8
+
+// Initialize the display
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+#include <RF24.h>
+  
+
+
+RF24 radio(9, 10); 
+
+unsigned long startTime = 0;
+unsigned long elapsedTime = 0;
+const int startButtonPin = 4;  
+bool timerStarted = false;
+const int switchPin1 = 2; 
+const int switchPin2 = 3; 
+
+void setup() {
+  Serial.begin(9600);
+  radio.begin();
+  radio.openWritingPipe(0xF0F0F0F0E1LL);  
+  pinMode(switchPin1, INPUT_PULLUP);
+  pinMode(switchPin2, INPUT_PULLUP);
+
+   tft.initR(INITR_GREENTAB);
+  tft.setRotation(3);
+  tft.invertDisplay(true); 
+  
+   pinMode(startButtonPin, INPUT_PULLUP);
+
+    while (digitalRead(startButtonPin) == HIGH) {
+    delay(100);
+  }
+
+  // Start the timer
+  startTime = millis();
+  timerStarted = true;
+}
+
+enum DisplayState {
+  WELCOME,
+  TIMER,TRANSMIT
+};
+DisplayState currentState = WELCOME;
+void loop() {
+
+if (digitalRead(switchPin1) == LOW) {
+    Serial.println("Switch1pressed");
+    radio.write("Switch1Pressed", sizeof("Switch1Pressed"));
+    delay(200);  
+  }
+   if (digitalRead(switchPin2) == LOW) {
+    Serial.println("Switch2pressed");
+    radio.write("Switch2Pressed", sizeof("Switch2Pressed"));
+    delay(200);  
+  }
+   
+  switch (currentState) {
+    case WELCOME:
+     
+      tft.fillScreen(ST7735_WHITE);
+      tft.setTextColor(ST7735_ORANGE);
+      tft.setTextSize(3);
+      tft.setCursor(12, 40);
+      tft.print("WELCOME!");
+      tft.setCursor(25, 70);
+       tft.print("NAFEES");
+      delay(2000); 
+      currentState = TIMER; 
+      break;
+
+       case TIMER:
+      if (timerStarted) {
+    elapsedTime = millis() - startTime;  // Calculate elapsed time
+
+    // Display elapsed time on the TFT screen
+    tft.setCursor(15, 35);
+    tft.fillScreen(ST7735_BLACK); 
+    tft.setTextColor(ST7735_GREEN);
+    tft.setTextSize(3); // Clear the screen before updating
+    tft.print("Timer: ");
+    tft.setCursor(20, 70);
+    tft.print(elapsedTime / 1000);  // Convert milliseconds to seconds
+    tft.print("s");
+    tft.setTextColor(ST7735_MAGENTA); 
+     tft.setTextSize(1);
+      tft.setCursor(100, 65);
+       tft.print("GIVE YOUR ");
+       tft.setCursor(100, 75);
+       tft.print("YOUR ");
+       tft.setCursor(100, 85);
+       tft.print("BEST ! ");
+      }
+      break;
+
+      
+  }
+  
+}
