@@ -1,0 +1,49 @@
+#include <RF24.h>
+uint8_t buf[8] = {
+  0
+};  // Keyboard Report Buffer: 8 bytes
+int led = 4;
+
+RF24 radio(9, 10);  // Set the CE and CSN pins
+
+void setup() {
+  Serial.begin(9600);
+  radio.begin();
+  radio.openReadingPipe(1, 0xF0F0F0F0E1LL);  // Set the receiving pipe address
+  radio.startListening();
+   pinMode(led, OUTPUT);
+}
+
+void loop() {
+  if (radio.available()) {
+    char receivedData[15];
+    radio.read(receivedData, sizeof(receivedData));
+
+    if (strcmp(receivedData, "Switch1Pressed") == 0) {
+     
+       buf[2] = 81;	  // Volume down key
+    Serial.write(buf, 8);	// Send keypress
+    
+    digitalWrite(led , HIGH);
+    releaseKey();
+    }
+    if (strcmp(receivedData, "Switch2Pressed") == 0) {
+     
+       buf[2] = 44;	  // Volume down key
+    Serial.write(buf, 8);	// Send keypress   
+    digitalWrite(led , LOW);
+    
+    releaseKey();
+    }
+    else{
+     }
+      // You can perform any action here based on the switch press
+    
+  }
+}
+void releaseKey() 
+{
+  buf[0] = 0;
+  buf[2] = 0;
+  Serial.write(buf, 8);	// Release key  
+}
