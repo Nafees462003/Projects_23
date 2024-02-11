@@ -1,0 +1,17 @@
+#include <Servo.h>
+
+Servo ESC; 
+
+int Speed; 
+
+void setup(){
+ESC.attach(9,1000,2000);
+Serial.begin(9600);
+}
+
+void loop(){
+  Speed = analogRead(A0);
+  Speed = map(Speed, 0, 1400, 0, 180);
+  ESC.write(Speed);
+  Serial.println(Speed);
+}
