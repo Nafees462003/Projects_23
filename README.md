@@ -1,6 +1,6 @@
 - Hi, I’m Shahrear Nafees
 - I’m interested in Robotics_Microcontrollers_3d printers_drone
-- All my project codes are in the repositories pined below
+- All my project codes are in the repositories pinned below
 
 
 
