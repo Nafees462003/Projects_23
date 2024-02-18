@@ -1,12 +1,12 @@
 char t;
  
 void setup() {
-pinMode(13,OUTPUT);   //left motors  forward
-pinMode(12,OUTPUT);   //left motors reverse
-pinMode(11,OUTPUT);   //right  motors forward
-pinMode(10,OUTPUT);   //right motors reverse
-pinMode(9,OUTPUT);   //left motors  forward
-pinMode(8,OUTPUT);   //left motors reverse
+//pinMode(13,OUTPUT);   //left motors  forward
+//pinMode(12,OUTPUT);   //left motors reverse 
+//pinMode(11,OUTPUT);   //right  motors forward
+//pinMode(10,OUTPUT);   //right motors reverse
+pinMode(7,OUTPUT);   //left motors  forward
+pinMode(6,OUTPUT);   //left motors reverse
 pinMode(5,OUTPUT);   //right  motors forward
 pinMode(4,OUTPUT);   //right motors reverse
 
@@ -21,50 +21,51 @@ if(Serial.available()){
 }
  
 if(t == 'F'){            //move  forward(all motors rotate in forward direction)
-  digitalWrite(13,HIGH);
-  digitalWrite(12,LOW);
-   digitalWrite(11,HIGH);
-  digitalWrite(10,LOW);
-   digitalWrite(9,HIGH);
-  digitalWrite(8,LOW);
-   digitalWrite(5,HIGH);
-  digitalWrite(4,LOW);
+  //digitalWrite(13,HIGH);
+  //digitalWrite(12,LOW);
+   //digitalWrite(11,HIGH);
+  //digitalWrite(10,LOW);
+   digitalWrite(6,HIGH);
+  digitalWrite(5,LOW);
+   digitalWrite(4,HIGH);
+  digitalWrite(7,LOW);
   
  
 }
  
 else if(t == 'B'){      //move reverse (all  motors rotate in reverse direction)
-  digitalWrite(13,LOW);
-  digitalWrite(12,HIGH);
-  digitalWrite(11,LOW);
-  digitalWrite(10,HIGH);
-  digitalWrite(9,LOW);
-  digitalWrite(8,HIGH);
-  digitalWrite(5,LOW);
-  digitalWrite(4,HIGH);
+  //digitalWrite(13,LOW);
+  //digitalWrite(12,HIGH);
+  //digitalWrite(11,LOW);
+  //digitalWrite(10,HIGH);
+
+  digitalWrite(7,HIGH);
+  digitalWrite(4,LOW);
+   digitalWrite(5,HIGH);
+  digitalWrite(6,LOW);
 }
   
 else if(t == 'L'){
         //turn right (left side motors rotate in forward direction,  right side motors doesn't rotate)
-  digitalWrite(13,LOW);
-  digitalWrite(12,HIGH);
-  digitalWrite(11,LOW);
-  digitalWrite(10,HIGH);     
-  digitalWrite(9,HIGH);
-  digitalWrite(8,LOW);
-  digitalWrite(5,HIGH);
-  digitalWrite(4,LOW);
+  //digitalWrite(13,LOW);
+  //digitalWrite(12,HIGH);
+  //digitalWrite(11,LOW);
+  //digitalWrite(10,HIGH);     
+  digitalWrite(7,HIGH);
+  digitalWrite(6,LOW);
+   digitalWrite(4,HIGH);
+  digitalWrite(5,LOW);
 }
  
 else  if(t == 'R'){      //turn left (right side motors rotate in forward direction, left  side motors doesn't rotate)
-  digitalWrite(13,HIGH);
-  digitalWrite(12,LOW);
-  digitalWrite(11,HIGH);
-  digitalWrite(10,LOW);
-  digitalWrite(9,LOW);
-  digitalWrite(8,HIGH);
-  digitalWrite(5,LOW);
-  digitalWrite(4,HIGH);
+  //digitalWrite(13,HIGH);
+  //digitalWrite(12,LOW);
+  //digitalWrite(11,HIGH);
+  //digitalWrite(10,LOW);
+ digitalWrite(6,HIGH);
+  digitalWrite(7,LOW);
+   digitalWrite(5,HIGH);
+  digitalWrite(4,LOW);
 }
   else  if(t == 'I'){
     digitalWrite(13,HIGH);
@@ -96,14 +97,15 @@ else  if(t == 'R'){      //turn left (right side motors rotate in forward direct
 
  
 else  if(t == 'S') {
-   digitalWrite(13,LOW);      //STOP (all motors stodigitalWrite(13,LOW);
-  digitalWrite(12,LOW);
-  digitalWrite(11,LOW);
-  digitalWrite(10,LOW);
-  digitalWrite(9,LOW);
-  digitalWrite(8,LOW);
+   //digitalWrite(13,LOW);      //STOP (all motors stodigitalWrite(13,LOW);
+  //digitalWrite(12,LOW);
+  //digitalWrite(11,LOW);
+  //digitalWrite(10,LOW);
+  digitalWrite(7,LOW);
+  digitalWrite(6,LOW);
   digitalWrite(5,LOW);
   digitalWrite(4,LOW);
 }
 
 }
+
