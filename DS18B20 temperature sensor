@@ -1,0 +1,87 @@
+#include <Adafruit_GFX.h>
+#include <Adafruit_ST7735.h>
+#include <SPI.h>
+#include <OneWire.h>
+#include <DallasTemperature.h>
+#define ONE_WIRE_BUS 6
+OneWire oneWire(ONE_WIRE_BUS);
+DallasTemperature sensors(&oneWire);
+// Pin configuration for your setup
+#define TFT_CS    10 // scl 13 sda 11
+#define TFT_RST   9
+#define TFT_DC    8
+
+// Initialize the display
+Adafruit_ST7735 tft = Adafruit_ST7735(TFT_CS, TFT_DC, TFT_RST);
+
+// Potentiometer pin
+int potPin = A0;
+int potPin2 = A1;
+
+void setup(void) {
+   Serial.println("Dallas Temperature IC Control Library Demo");
+
+  // Start up the library
+  sensors.begin();
+  // Initialize serial communication for debugging
+  Serial.begin(9600);
+
+  // Initialize display
+  tft.initR(INITR_BLACKTAB);
+  tft.setRotation(1); // Adjust the rotation if needed
+}
+
+void loop(void) {
+  // call sensors.requestTemperatures() to issue a global temperature 
+  // request to all devices on the bus
+  Serial.print("Requesting temperatures...");
+  sensors.requestTemperatures(); // Send the command to get temperatures
+  Serial.println("DONE");
+  // After we got the temperatures, we can print them here.
+  // We use the function ByIndex, and as an example get the temperature from the first sensor only.
+  float tempC = sensors.getTempCByIndex(0);
+
+  if(tempC != DEVICE_DISCONNECTED_C) 
+  {
+
+    
+  // Read the potentiometer value
+  
+  int potValue = analogRead(potPin);
+   int potValue2 = analogRead(potPin2);
+
+  // Map the potentiometer value to the column position
+  int columnPosition = map(potValue, 0, 1023,  0,tft.width() );
+ int columnPosition2 = map(potValue2, 0, 1023,  0, tft.height() );
+  // Clear the screen
+  tft.fillScreen(ST7735_WHITE);
+
+  // Set the text color
+  tft.setTextColor(ST7735_BLUE);
+
+  // Set the text size
+  tft.setTextSize(2);
+
+  // Set the cursor position based on the potentiometer
+  tft.setCursor(columnPosition,columnPosition2);
+
+  // Display your text
+  tft.print(tempC );
+
+  // Delay for stability
+  
+    Serial.print("Temperature for the device 1 (index 0) is: ");
+    Serial.println(tempC);
+  } 
+  else
+  {
+    Serial.println("Error: Could not read temperature data");
+  }
+
+delay(.0000001);
+
+
+  
+}
+
+
