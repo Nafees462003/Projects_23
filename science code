@@ -1,0 +1,83 @@
+from flask import Flask
+from flask_socketio import SocketIO, emit
+import serial
+import time
+from threading import Thread, Lock
+from datetime import datetime
+
+app = Flask(__name__)
+socketio = SocketIO(app, cors_allowed_origins='*')
+
+thread = None
+thread_lock = Lock()
+
+# Serial port global variables
+ser = None
+temp = None
+NH = None
+ph = None
+humid = None
+
+def get_current_datetime():
+    return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+
+def background_thread():
+    global ser, temp, NH, ph, humid
+    while True:
+        try:
+            if ser.in_waiting > 0:
+                line = ser.readline().decode('utf-8').strip()
+                if line.startswith("T "):
+                    temp = float(line.split()[1])
+                    socketio.emit('Temperature', temp, broadcast=True)
+                elif line.startswith("H "):
+                    humid = float(line.split()[1])
+                    socketio.emit('Humidity', humid, broadcast=True)
+                elif line.startswith("p "):
+                    ph = float(line.split()[1])
+                    socketio.emit('ph', ph, broadcast=True)
+                elif line.startswith("A "):
+                    NH = float(line.split()[1])
+                    socketio.emit('Ammonia', NH, broadcast=True)
+            else:
+                time.sleep(1)  # Adjust as necessary
+        except serial.SerialException as e:
+            print(f"Serial error: {e}")
+            # Attempt to reopen serial port or handle error
+        except Exception as e:
+            print(f"Unexpected error: {e}")
+            # General error handling
+
+@app.route('/')
+def index():
+    return 'Server is running'
+
+@socketio.on('connect')
+def handle_connect():
+    global thread
+    print('Client connected')
+    with thread_lock:
+        if thread is None:
+            thread = socketio.start_background_task(background_thread)
+
+@socketio.on('input message')
+def handle_message(message):
+    emit('input message', message, broadcast=True)
+    print('message: ' + message)
+
+@socketio.on('intro message')
+def handle_intro_message(message):
+    print('intro message: ' + message)
+    emit('intro message', message, broadcast=True)
+
+@socketio.on('disconnect')
+def handle_disconnect():
+    print('A user disconnected')
+
+if __name__ == '__main__':
+    try:
+        ser = serial.Serial('/dev/ttyACM0', 9600, timeout=1.0)
+        socketio.run(app, host='0.0.0.0', port=3002)
+    except serial.SerialException as e:
+        print(f"Failed to open serial port: {e}")
+
