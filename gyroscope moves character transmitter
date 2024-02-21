@@ -7,6 +7,11 @@
   #include <Adafruit_MPU6050.h>
 #include <Adafruit_Sensor.h>
 #include <Wire.h>
+#include <Servo.h>
+Servo ch1;
+Servo ch2;
+int ch_width_1 = 0;
+int ch_width_2 = 0;
 
 #define TFT_CS    7 // scl 13 sda 11
 #define TFT_RST   6
@@ -41,6 +46,14 @@ const int switchPin2 = 3;
 }
   void setup()
 {
+
+
+         ch1.attach(5);
+         ch2.attach(2);
+
+        
+
+
   
  tft.initR(INITR_GREENTAB);
   tft.setRotation(3);
@@ -124,6 +137,10 @@ pinMode(switchPin2, INPUT_PULLUP);
   data.valuey = map(a.acceleration.y, -8, 8, 0, 255);  // "true" or "false" for servo direction | "true" veya "false" servo yönünü belirler
   radio.write(&data, sizeof(Signal));
   Serial.println(data.valuey);
+  ch_width_1 = map(valuey,     -8, 8, 1000, 2000);
+  ch_width_2 = map(valuex,     -8, 8, 1000, 2000);
+  ch1.writeMicroseconds(ch_width_1);
+  ch2.writeMicroseconds(ch_width_2);
   delay(50);
   
 }
