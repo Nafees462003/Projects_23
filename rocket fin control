@@ -1,0 +1,71 @@
+char t;
+#include <Servo.h>
+
+Servo myservo2;
+Servo myservo1;
+ int currentAngle = 0;
+void setup() {
+ myservo1.attach(9);
+  myservo2.attach(10);
+
+
+Serial.begin(9600);
+ 
+}
+ 
+void loop() {
+if(Serial.available()){
+  t = Serial.read();
+ 
+}
+ 
+if(t == 'F'){            //move  forward(all motors rotate in forward direction)
+  int direction = 1;
+    currentAngle += direction;
+
+    // Limit the angle to the range of 0 to 90 degrees
+    currentAngle = constrain(currentAngle, 0, 90);
+
+    // Move the servo to the new angle
+    myservo1.write(currentAngle);
+    delay(20); // Add a small delay for smoother motion
+ 
+}
+if(t == 'B'){            //move  forward(all motors rotate in forward direction)
+  int direction = 1;
+    currentAngle -= direction;
+
+    // Limit the angle to the range of 0 to 90 degrees
+    currentAngle = constrain(currentAngle, 0, 90);
+
+    // Move the servo to the new angle
+    myservo1.write(currentAngle);
+    delay(20); // Add a small delay for smoother motion
+ 
+}
+if(t == 'R'){            //move  forward(all motors rotate in forward direction)
+  int direction = 1;
+    currentAngle += direction;
+
+    // Limit the angle to the range of 0 to 90 degrees
+    currentAngle = constrain(currentAngle, 0, 90);
+
+    // Move the servo to the new angle
+    myservo2.write(currentAngle);
+    delay(20); // Add a small delay for smoother motion
+ 
+}
+if(t == 'L'){            //move  forward(all motors rotate in forward direction)
+  int direction = 1;
+    currentAngle -= direction;
+
+    // Limit the angle to the range of 0 to 90 degrees
+    currentAngle = constrain(currentAngle, 0, 90);
+
+    // Move the servo to the new angle
+    myservo2.write(currentAngle);
+    delay(20); // Add a small delay for smoother motion
+ 
+}
+}
+ 
