@@ -3,7 +3,8 @@ char t;
 
 Servo myservo2;
 Servo myservo1;
- int currentAngle = 0;
+ int currentAngle1 = 0;
+  int currentAngle2 = 0;
 void setup() {
  myservo1.attach(9);
   myservo2.attach(10);
@@ -20,50 +21,50 @@ if(Serial.available()){
 }
  
 if(t == 'F'){            //move  forward(all motors rotate in forward direction)
-  int direction = 1;
-    currentAngle += direction;
+  int direction1 = 5;
+    currentAngle1 += direction1;
 
     // Limit the angle to the range of 0 to 90 degrees
-    currentAngle = constrain(currentAngle, 0, 90);
+    currentAngle1 = constrain(currentAngle1, 0, 180);
 
     // Move the servo to the new angle
-    myservo1.write(currentAngle);
+    myservo1.write(currentAngle1);
     delay(20); // Add a small delay for smoother motion
  
 }
 if(t == 'B'){            //move  forward(all motors rotate in forward direction)
-  int direction = 1;
-    currentAngle -= direction;
+  int direction1 = 5;
+    currentAngle1 -= direction1;
 
     // Limit the angle to the range of 0 to 90 degrees
-    currentAngle = constrain(currentAngle, 0, 90);
+    currentAngle1 = constrain(currentAngle1, 0, 180);
 
     // Move the servo to the new angle
-    myservo1.write(currentAngle);
+    myservo1.write(currentAngle1);
     delay(20); // Add a small delay for smoother motion
  
 }
 if(t == 'R'){            //move  forward(all motors rotate in forward direction)
-  int direction = 1;
-    currentAngle += direction;
+  int direction2 = 5;
+    currentAngle2 += direction2;
 
     // Limit the angle to the range of 0 to 90 degrees
-    currentAngle = constrain(currentAngle, 0, 90);
+    currentAngle2 = constrain(currentAngle2, 0, 180);
 
     // Move the servo to the new angle
-    myservo2.write(currentAngle);
+    myservo2.write(currentAngle2);
     delay(20); // Add a small delay for smoother motion
  
 }
 if(t == 'L'){            //move  forward(all motors rotate in forward direction)
-  int direction = 1;
-    currentAngle -= direction;
+  int direction2 = 5;
+    currentAngle2 -= direction2;
 
     // Limit the angle to the range of 0 to 90 degrees
-    currentAngle = constrain(currentAngle, 0, 90);
+    currentAngle2 = constrain(currentAngle2, 0, 180);
 
     // Move the servo to the new angle
-    myservo2.write(currentAngle);
+    myservo2.write(currentAngle2);
     delay(20); // Add a small delay for smoother motion
  
 }
