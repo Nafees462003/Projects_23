@@ -2,8 +2,8 @@
 #include <PubSubClient.h>
 int led = 13;
 // Update these with values suitable for your network.
-const char* ssid = "Phoenix";
-const char* password = "rover1@mist";
+const char* ssid = "****";
+const char* password = "****";
 const char* mqtt_server = "91.121.93.94";  // test.mosquitto.org
 
 WiFiClient espClient;
