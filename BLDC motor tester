@@ -11,7 +11,7 @@ Serial.begin(9600);
 
 void loop(){
   Speed = analogRead(A0);
-  Speed = map(Speed, 0, 1400, 0, 180);
+  Speed = map(Speed, 0, 1000, 0, 180);
   ESC.write(Speed);
   Serial.println(Speed);
 }
