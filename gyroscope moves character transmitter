@@ -105,8 +105,8 @@ pinMode(switchPin2, INPUT_PULLUP);
 
 
   // Map the potentiometer value to the column position
-  int columnPosition = map(valuey, -35, 35,tft.width() ,0  );
- int columnPosition2 = map(valuex, -30, 30,  0 ,tft.height());
+  int columnPosition = map(valuey, -35, 35,tft.width() ,-10  );
+ int columnPosition2 = map(valuex, -30, 30,  -10 ,tft.height());
   // Clear the screen
   tft.fillScreen(ST7735_BLACK); 
       tft.setTextColor(ST7735_MAGENTA);
