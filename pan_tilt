@@ -1,0 +1,70 @@
+  #include <Servo.h>
+  Servo pan;
+  Servo tilt;
+  int panpos =90;
+  int tiltpos=0;
+  void setup()
+   {
+    Serial.begin(9600);
+    pan.attach(8);  
+  tilt.attach(9);
+   pan.write(panpos); 
+  tilt.write(tiltpos); 
+  }
+
+
+  void panServo(int panval)
+  {
+
+  if ( panval==1000)
+  {
+    panpos--;
+  pan.write(panpos);
+  }
+  
+
+  else if (panval==2000)
+  {
+    panpos++;
+   
+  pan.write(panpos);
+  }
+  
+  }
+
+
+ void tiltServo(int tiltval) 
+ {
+ 
+   if (tiltval == 2000)
+  {
+    tiltpos++;
+   
+  tilt.write(tiltpos);
+  }
+  
+
+   else if ( tiltval == 1000)
+  {
+    tiltpos--;
+  tilt.write(tiltpos);
+  }
+
+ }
+ 
+  
+  
+   void loop()
+  {
+    if (Serial.available() > 0) {
+    String input = Serial.readStringUntil('\n');  // Read the incoming data as a string
+    input.trim();  // Remove any trailing newline or spaces
+
+    int value = input.toInt();  // Convert input to an integer
+   
+      panServo(value);  // Control pan servo
+      tiltServo(value);
+      } // Control tilt servo
+
+
+  }
