@@ -13,7 +13,8 @@ AnimatedGIF gif;
 File gifFile;              // Global File object for the GIF file
 TFT_eSPI tft = TFT_eSPI(); 
 
-const char *filename = "/200w.gif";   // Change to load other gif files in images/GIF
+char filename[128] = "/kiss.gif";
+   // Change to load other gif files in images/GIF
 void setup()
 {
   Serial.begin(115200);
@@ -80,6 +81,60 @@ void setup()
 
 void loop()
 {
+   if (Serial.available()) {
+        String input = Serial.readStringUntil('\n');
+        input.trim(); // Remove any trailing newline or spaces
+
+        // Copy the input to the filename array
+        input.toCharArray(filename, sizeof(filename));
+        Serial.print("Filename updated to: ");
+        Serial.println(filename);
+         Serial.println("Initialize SPIFFS...");
+  if (!SPIFFS.begin(true))
+  {
+    Serial.println("SPIFFS initialization failed!");
+  }
+
+  // Reformmating the SPIFFS to have space if a large GIF is loaded
+  // You could run out of SPIFFS storage space if you load more than one image or a large GIF
+  // You can also increase the SPIFFS storage space by changing the partition of the ESP32
+  //
+  Serial.println("Formatting SPIFFS...");
+  SPIFFS.format(); // This will erase all the files, change as needed, SPIFFs is non-volatile memory
+  Serial.println("SPIFFS formatted successfully.");
+
+  // Open GIF file from SD card
+  Serial.println("Openning GIF file from SD card...");
+  File sdFile = SD.open(filename);
+  if (!sdFile)
+  {
+    Serial.println("Failed to open GIF file from SD card!");
+    return;
+  }
+
+  // Create a file in SPIFFS to store the GIF
+  File spiffsFile = SPIFFS.open(filename, FILE_WRITE, true);
+  if (!spiffsFile)
+  {
+    Serial.println("Failed to copy GIF in SPIFFS!");
+    return;
+  }
+
+  // Read the GIF from SD card and write to SPIFFS
+  Serial.println("Copy GIF in SPIFFS...");
+  byte buffer[512];
+  while (sdFile.available())
+  {
+    int bytesRead = sdFile.read(buffer, sizeof(buffer));
+    spiffsFile.write(buffer, bytesRead);
+  }
+
+  spiffsFile.close();
+  sdFile.close();
+
+    }
+
+   
   if (gif.open(filename, fileOpen, fileClose, fileRead, fileSeek, GIFDraw))
   {
     tft.startWrite(); // The TFT chip slect is locked low
