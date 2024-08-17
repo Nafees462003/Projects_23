@@ -8,6 +8,8 @@
 #include <AnimatedGIF.h>   // Install this library with the Arduino Library Manager
 
 #define SD_CS_PIN 12 // Chip Select Pin (CS) for SD card Reader
+//SD_MISO_PIN 19
+//SD_SCk_PIN 18
 
 AnimatedGIF gif;
 File gifFile;              // Global File object for the GIF file
