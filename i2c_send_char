@@ -1,0 +1,16 @@
+#include <Wire.h>
+
+const int slaveAddress = 8; // I2C address of the ESP32
+
+void setup() {
+  Wire.begin(); // Join I2C bus as master
+  Serial.begin(115200); // Initialize serial communication
+}
+
+void loop() {
+  Wire.beginTransmission(slaveAddress); // Begin transmission to the slave device
+  Wire.write('y'); // Send a character
+  Wire.endTransmission(); // End transmission
+  
+  delay(1000); // Wait for a second
+}
