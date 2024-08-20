@@ -1,0 +1,21 @@
+#include <Wire.h>
+
+const int slaveAddress = 8; // I2C address of the ESP32
+
+void setup() {
+  Wire.begin(slaveAddress); // Join I2C bus as slave
+  Wire.onReceive(receiveEvent); // Register event handler
+  Serial.begin(115200); // Initialize serial communication
+}
+
+void loop() {
+  // Main loop does nothing, we wait for I2C events
+}
+
+void receiveEvent(int howMany) {
+  while (Wire.available()) {
+    char receivedChar = Wire.read(); // Read the incoming character
+    Serial.print("Received: ");
+    Serial.println(receivedChar); // Print the received character
+  }
+}
