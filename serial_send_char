@@ -1,0 +1,9 @@
+void setup() {
+  Serial.begin(115200); // Initialize serial communication at 115200 baud rate
+}
+
+void loop() {
+  char data = 'A'; // Character to send
+  Serial.write(data); // Send the character
+  delay(1000); // Wait for a second
+}
