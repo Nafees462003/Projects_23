@@ -1,97 +1,71 @@
 #include <Wire.h>
 const int slaveAddress = 8;
-#define GP_UP 3
-#define GP_DOWN 4
-#define GP_LEFT 5
-#define GP_RIGHT A1
-#define GP_A 7
-#define GP_B 8
-#define shift 9
 
+// Pin definitions (compressed into uint8_t)
+uint8_t keyPins[19] = {3, 4, 5, 6, 7, 9, 10, 11, 12, 13, 14, 15, 16, A7, A6, A0, A1, A2, A3};
 
-bool keyStates[6] = {false, false, false, false, false, false};
-int keyPins[6] = {GP_UP, GP_DOWN, GP_LEFT, GP_RIGHT, GP_A, GP_B};
-uint8_t keyCodes[6] = {'a', 'b', 'c', 'd', 'e', 'f'};
-uint8_t keyCodesU[6] = {'A', 'B', 'C', 'D', 'E', 'F'};
+// Keycodes (still uint8_t as before)
+uint8_t keyCodes[19] = {'1', '2', '3', '4', 'q', 'e','r', 't', 'y', '6', '7', 'f','g', '5', 'z', 'x', 'c', 'v','b'};
 
-unsigned long lastDebounceTime[6] = {0, 0, 0, 0, 0, 0};
+// Debounce and timing (compressed into uint16_t)
+uint16_t lastDebounceTime[19] = {0};  // Using 2 bytes per element instead of 4 bytes
+uint16_t lastSendTime[19] = {0};      // Same here
+
+// Store keyStates and isAutoRepeating as bits in two uint32_t variables (compressed from bool arrays)
+uint32_t keyStates = 0;          // 32 bits to store 19 key states
+uint32_t isAutoRepeating = 0;    // 32 bits to store 19 auto-repeat states
+
 unsigned long debounceDelay = 50;  // 50 milliseconds debounce time
-
 unsigned long repeatDelay = 500;   // Delay before starting auto-repeat (500ms)
-unsigned long repeatRate = 80;    // Time between auto-repeated key presses (100ms)
+unsigned long repeatRate = 80;    // Time between auto-repeated key presses (80ms)
 
 void setup() {
   Wire.begin(); // Join I2C bus as master
- 
   setInputs();
 }
 
 void loop() {
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < 19; i++) {
     handleButton(i);
   }
-  
 }
 
 void setInputs() {
-  for (int i = 0; i < 6; i++) {
+  for (int i = 0; i < 19; i++) {
     pinMode(keyPins[i], INPUT_PULLUP);
   }
-   pinMode( shift , INPUT_PULLUP);
 }
 
 void handleButton(int keyIndex) {
-  static unsigned long lastSendTime[6] = {0, 0, 0, 0, 0, 0}; // Time of the last transmission
-  static bool isAutoRepeating[6] = {false, false, false, false, false, false};  // Track if auto-repeat is active
-  
   int reading = digitalRead(keyPins[keyIndex]);
 
   // If the button state has changed
-  if (reading != keyStates[keyIndex]) {
+  if (reading != bitRead(keyStates, keyIndex)) {
     lastDebounceTime[keyIndex] = millis();  // Reset debounce timer
   }
 
   // Debounce logic: Only act if the button state is stable for debounceDelay
   if ((millis() - lastDebounceTime[keyIndex]) > debounceDelay) {
     if (reading == LOW) {  // Button pressed
-      if (!keyStates[keyIndex]) {
+      if (!bitRead(keyStates, keyIndex)) {
         // Button was just pressed
-        keyStates[keyIndex] = true;
+        bitWrite(keyStates, keyIndex, 1);
         lastSendTime[keyIndex] = millis();  // Mark the time of the first press
         sendKeyPress(keyIndex);  // Send the key press immediately
-         // Enable auto-repeat
+        bitWrite(isAutoRepeating, keyIndex, 1);  // Enable auto-repeat
       }
 
-      // Handle auto-repeat in a while loop
-      while (keyStates[keyIndex]) {
-
-
-        
-        if (millis() - lastSendTime[keyIndex] > repeatDelay) {
-           isAutoRepeating[keyIndex] = true;
+      // Handle auto-repeat
+      if (bitRead(isAutoRepeating, keyIndex)) {
+        if (millis() - lastSendTime[keyIndex] > repeatRate) {
           sendKeyPress(keyIndex);
-            // Update the last send time
+          lastSendTime[keyIndex] = millis();  // Update the last send time
         }
-
-
-     if(digitalRead(keyPins[keyIndex]) == HIGH)
-     {
- 
-          keyStates[keyIndex] = false;  // Reset the state
-          isAutoRepeating[keyIndex] = false;
-           // Stop auto-repeat
-          break;
-
-     }
-
-        // Break the loop if the button is released
-       
-        delay(10);
       }
     } else {  // Button released
-      if (keyStates[keyIndex]) {
-        keyStates[keyIndex] = false;  // Reset the state
-        isAutoRepeating[keyIndex] = false;  // Stop auto-repeat
+      if (bitRead(keyStates, keyIndex)) {
+        bitWrite(keyStates, keyIndex, 0);  // Reset the state
+        bitWrite(isAutoRepeating, keyIndex, 0);  // Stop auto-repeat
       }
     }
   }
@@ -99,14 +73,6 @@ void handleButton(int keyIndex) {
 
 void sendKeyPress(int keyIndex) {
   Wire.beginTransmission(slaveAddress);
-   if (digitalRead(shift) == HIGH) {  // Begin transmission to the slave device
   Wire.write(keyCodes[keyIndex]);        // Send the key code
   Wire.endTransmission(); 
-  }
-  else if   (digitalRead(shift) == LOW)
-  {   
-   Wire.write(keyCodesU[keyIndex]);  
-   Wire.endTransmission();
-  }            // End transmission
-     // For debugging
 }
