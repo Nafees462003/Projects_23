@@ -1,0 +1,211 @@
+#include <BleKeyboard.h>
+#include <Wire.h>
+
+const int slaveAddress = 8;
+BleKeyboard bleKeyboard("Xinion#keyboard");
+
+#define w 27
+#define a 14
+#define s 12
+#define d 13
+#define tab 25
+#define shift 4
+#define ctrl 32
+#define win 19                                                                     
+#define alt 26
+#define enter 23
+#define backspace 18
+#define space 5
+
+
+
+
+
+
+
+
+
+
+
+void setup() {
+  Wire.begin(slaveAddress); // Join I2C bus as slave
+  Wire.onReceive(receiveEvent); 
+  Serial.begin(115200);
+  Serial.println("Code running...");
+
+  bleKeyboard.begin();
+
+  pinMode( a , INPUT_PULLUP);
+  pinMode( s , INPUT_PULLUP);
+  pinMode( d , INPUT_PULLUP);
+  pinMode( w , INPUT_PULLUP);
+  pinMode( backspace , INPUT_PULLUP);
+  pinMode( enter , INPUT_PULLUP);        
+  pinMode( alt , INPUT_PULLUP);
+  pinMode( win , INPUT_PULLUP);
+  pinMode( ctrl , INPUT_PULLUP);
+  pinMode( shift , INPUT_PULLUP);
+  pinMode( tab , INPUT_PULLUP);
+   pinMode( space , INPUT_PULLUP);
+        
+        
+        
+
+}
+
+
+
+void receiveEvent(int howMany) {
+  
+  while (Wire.available()) {
+  char receivedChar = Wire.read();
+ 
+  
+    Serial.print("Received: ");
+    Serial.println(receivedChar); 
+     bleKeyboard.press(receivedChar);
+  
+    bleKeyboard.release(receivedChar);
+       
+  }
+} 
+    
+     
+    
+  
+
+
+void loop() {
+
+    
+ if(digitalRead(a) == LOW)
+       {
+       bleKeyboard.press('a'); 
+       }
+       else  if(digitalRead(a) == HIGH)
+       {
+       bleKeyboard.release('a'); 
+       }
+
+         if(digitalRead(s) == LOW)
+       {
+       bleKeyboard.press('s'); 
+       }
+       else  if(digitalRead(s) == HIGH)
+       {
+       bleKeyboard.release('s'); 
+       }
+
+
+         if(digitalRead(d) == LOW)
+       {
+       bleKeyboard.press('d'); 
+       }
+       else  if(digitalRead(d) == HIGH)
+       {
+       bleKeyboard.release('d'); 
+       }
+
+
+         if(digitalRead(w) == LOW)
+       {
+       bleKeyboard.press('w'); 
+       }
+       else  if(digitalRead(w) == HIGH)
+       {
+       bleKeyboard.release('w'); 
+       }
+
+
+        if(digitalRead(shift) == LOW)
+       {
+       bleKeyboard.press(KEY_LEFT_SHIFT); 
+       }
+       else  if(digitalRead(shift) == HIGH)
+       {
+       bleKeyboard.release(KEY_LEFT_SHIFT); 
+       }
+
+
+          if(digitalRead(ctrl) == LOW)
+       {
+       bleKeyboard.press(KEY_LEFT_CTRL); 
+       }
+       else  if(digitalRead(ctrl) == HIGH)
+       {
+       bleKeyboard.release(KEY_LEFT_CTRL); 
+       }
+       
+
+
+    
+         if(digitalRead(alt) == LOW)
+       {
+       bleKeyboard.press( KEY_LEFT_ALT); 
+       }
+       else  if(digitalRead(alt) == HIGH)
+       {
+       bleKeyboard.release( KEY_LEFT_ALT); 
+       }
+
+
+
+      if(digitalRead(space) == LOW)
+       {
+       bleKeyboard.press(' '); 
+       }
+       else  if(digitalRead(space) == HIGH)
+       {
+       bleKeyboard.release(' '); 
+       }
+
+
+
+             if(digitalRead(enter) == LOW)
+       {
+       bleKeyboard.press(KEY_RETURN); 
+       }
+       else  if(digitalRead(enter) == HIGH)
+       {
+       bleKeyboard.release(KEY_RETURN); 
+       }
+
+
+
+
+             if(digitalRead(backspace) == LOW)
+       {
+       bleKeyboard.press(KEY_BACKSPACE ); 
+       }
+       else  if(digitalRead(backspace) == HIGH)
+       {
+       bleKeyboard.release(KEY_BACKSPACE ); 
+       }
+
+
+
+                if(digitalRead(win) == LOW)
+       {
+       bleKeyboard.press(KEY_LEFT_GUI); 
+       }
+       else  if(digitalRead(win) == HIGH)
+       {
+       bleKeyboard.release(KEY_LEFT_GUI); 
+       }
+
+
+                     if(digitalRead(tab) == LOW)
+       {
+       bleKeyboard.press(KEY_TAB); 
+       }
+       else  if(digitalRead(tab) == HIGH)
+       {
+       bleKeyboard.release(KEY_TAB ); 
+       }
+
+       delay(100);
+
+
+
+}
+
