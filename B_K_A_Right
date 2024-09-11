@@ -1,11 +1,11 @@
 #include <Wire.h>
 const int slaveAddress = 8;
 
-uint8_t keyPins[23] = {3, 4, 5, 6, 7,8, 9, 10, 11, 12, 13, 14, 15, 16, A7, A6, A0, A1, A2, A3,25,1,2};
-uint8_t keyCodes[23] = {'8', '9', '0', '-', '=', 'u','i', 'o', 'p', '[', ']', '\\','h', 'j', 'l', 'k', ';', '\'','n', 'm', ',', '.','/'};
+uint8_t keyPins[22] = {3, 4, 5, 6, 7,8, 9, 10, 11, 12, 13, 14, 15, 16, A7, A6, A0, A1, A2, A3,25,1};
+uint8_t keyCodes[22] = {'8', '9', '0', '-', '=', 'u','i', 'o', 'p', '[', ']', '\\','h', 'j', 'l', 'k', ';', '\'','n', 'm', ',', '.'};
 
 // Timing (compressed into uint16_t)
-uint16_t lastDebounceTime[23] = {0};  // Using 2 bytes per element instead of 4 bytes
+uint16_t lastDebounceTime[22] = {0};  // Using 2 bytes per element instead of 4 bytes
      // Same here
 
 // Store keyStates and isAutoRepeating as bits in two uint32_t variables (compressed from bool arrays)
@@ -22,20 +22,20 @@ void setup() {
 }
 
 void loop() {
-  for (int i = 0; i < 23; i++) {
+  for (int i = 0; i < 22; i++) {
     handleButton(i);
   }
 }
 
 void setInputs() {
-  for (int i = 0; i < 23; i++) {
+  for (int i = 0; i < 22; i++) {
     pinMode(keyPins[i], INPUT_PULLUP);
   }
 }
 
 void handleButton(int keyIndex) {
-    static unsigned long lastSendTime[23] = {0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0,0, 0, 0, 0,0}; // Time of the last transmission
-  static bool isAutoRepeating[23] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false}; // Track if auto-repeat is active
+    static unsigned long lastSendTime[22] = {0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0,0, 0, 0, 0}; // Time of the last transmission
+  static bool isAutoRepeating[22] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false}; // Track if auto-repeat is active
  
   int reading = digitalRead(keyPins[keyIndex]);
 
