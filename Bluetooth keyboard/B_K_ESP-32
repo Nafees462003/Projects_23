@@ -1,3 +1,4 @@
+
 #include <BleKeyboard.h>
 #include <Wire.h>
 
@@ -64,8 +65,9 @@ void receiveEvent(int howMany) {
     Serial.print("Received: ");
     Serial.println(receivedChar); 
      bleKeyboard.press(receivedChar);
-  
+      delay(50);
     bleKeyboard.release(receivedChar);
+   
        
   }
 } 
@@ -203,9 +205,8 @@ void loop() {
        bleKeyboard.release(KEY_TAB ); 
        }
 
-       delay(100);
+       delay(10);
 
 
 
 }
-
