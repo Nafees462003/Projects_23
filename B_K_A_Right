@@ -34,8 +34,8 @@ void setInputs() {
 }
 
 void handleButton(int keyIndex) {
-    static unsigned long lastSendTime[23] = {0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0,0}; // Time of the last transmission
-  static bool isAutoRepeating[23] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false}; // Track if auto-repeat is active
+    static unsigned long lastSendTime[23] = {0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0,0, 0, 0, 0, 0, 0,0, 0, 0, 0,0}; // Time of the last transmission
+  static bool isAutoRepeating[23] = {false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false}; // Track if auto-repeat is active
  
   int reading = digitalRead(keyPins[keyIndex]);
 
