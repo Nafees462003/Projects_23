@@ -14,11 +14,13 @@ File gifFile;              // Global File object for the GIF file
 TFT_eSPI tft = TFT_eSPI(); 
 
 char filename[128] = "/kiss.gif";
+//for 1.8 inch RED_tab on... #define TFT_RGB_ORDER TFT_RGB on,hiwght weidth set on
    // Change to load other gif files in images/GIF
 void setup()
 {
   Serial.begin(115200);
   tft.begin();
+tft.invertDisplay(false);
   tft.setRotation(3); // Adjust Rotation of your screen (0-3)
   tft.fillScreen(TFT_BLACK);
 
