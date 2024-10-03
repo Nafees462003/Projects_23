@@ -7,7 +7,7 @@
 
 #include <AnimatedGIF.h>   // Install this library with the Arduino Library Manager
 
-#define SD_CS_PIN 12 // Chip Select Pin (CS) for SD card Reader
+const int chipSelect = 12;// Chip Select Pin (CS) for SD card Reader
 
 AnimatedGIF gif;
 File gifFile;              // Global File object for the GIF file
@@ -26,7 +26,7 @@ tft.invertDisplay(false);
 
   // Initialize SD card
   Serial.println("SD card initialization...");
-  if (!SD.begin(SD_CS_PIN))
+  if (!SD.begin(chipSelect))
   {
     Serial.println("SD card initialization failed!");
     return;
