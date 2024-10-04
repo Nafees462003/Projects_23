@@ -1,193 +1,170 @@
-#include <SD.h>
+#include <AnimatedGIF.h>
+#include <TFT_eSPI.h> // Include the TFT_eSPI library
 #include <SPI.h>
-#include <FS.h>
-#include <SPIFFS.h>
-#include <TFT_eSPI.h>      // Install this library with the Arduino Library Manager
-                           // Don't forget to configure the driver for the display!
+#include <SD.h>
 
-#include <AnimatedGIF.h>   // Install this library with the Arduino Library Manager
+#define TFT_CS         15
+#define TFT_RST        4
+#define TFT_DC         2
 
-const int chipSelect = 12;// Chip Select Pin (CS) for SD card Reader
+#define DISPLAY_WIDTH  128
+#define DISPLAY_HEIGHT 160
 
+TFT_eSPI tft = TFT_eSPI(); // Create TFT object
 AnimatedGIF gif;
-File gifFile;              // Global File object for the GIF file
-TFT_eSPI tft = TFT_eSPI(); 
+File f;
+String gifFilename = "/kiss2.GIF"; // Default filename
 
-char filename[128] = "/kiss2.gif";
-//for 1.8 inch RED_tab on... #define TFT_RGB_ORDER TFT_RGB on,hiwght weidth set on
-   // Change to load other gif files in images/GIF
-void setup()
-{
-  Serial.begin(115200);
-  tft.begin();
-tft.invertDisplay(false);
-  tft.setRotation(2); // Adjust Rotation of your screen (0-3)
-  tft.fillScreen(TFT_BLACK);
-
-  // Initialize SD card
-  Serial.println("SD card initialization...");
-  if (!SD.begin(chipSelect))
-  {
-    Serial.println("SD card initialization failed!");
-    return;
+void * GIFOpenFile(const char *fname, int32_t *pSize) {
+  f = SD.open(fname);
+  if (f) {
+    *pSize = f.size();
+    return (void *)&f;
   }
-
-  // Initialize SPIFFS
-  Serial.println("Initialize SPIFFS...");
-  if (!SPIFFS.begin(true))
-  {
-    Serial.println("SPIFFS initialization failed!");
-  }
-
-  // Reformmating the SPIFFS to have space if a large GIF is loaded
-  // You could run out of SPIFFS storage space if you load more than one image or a large GIF
-  // You can also increase the SPIFFS storage space by changing the partition of the ESP32
-  //
-  Serial.println("Formatting SPIFFS...");
-  SPIFFS.format(); // This will erase all the files, change as needed, SPIFFs is non-volatile memory
-  Serial.println("SPIFFS formatted successfully.");
-
-  // Open GIF file from SD card
-  Serial.println("Openning GIF file from SD card...");
-  File sdFile = SD.open(filename);
-  if (!sdFile)
-  {
-    Serial.println("Failed to open GIF file from SD card!");
-    return;
-  }
-
-  // Create a file in SPIFFS to store the GIF
-  File spiffsFile = SPIFFS.open(filename, FILE_WRITE, true);
-  if (!spiffsFile)
-  {
-    Serial.println("Failed to copy GIF in SPIFFS!");
-    return;
-  }
-
-  // Read the GIF from SD card and write to SPIFFS
-  Serial.println("Copy GIF in SPIFFS...");
-  byte buffer[512];
-  while (sdFile.available())
-  {
-    int bytesRead = sdFile.read(buffer, sizeof(buffer));
-    spiffsFile.write(buffer, bytesRead);
-  }
-
-  spiffsFile.close();
-  sdFile.close();
-
-  // Initialize the GIF
-  Serial.println("Starting animation...");
-  gif.begin(BIG_ENDIAN_PIXELS);
+  return NULL;
 }
 
-void loop()
-{
-   if (Serial.available()) {
-        String input = Serial.readStringUntil('\n');
-        input.trim(); // Remove any trailing newline or spaces
+void GIFCloseFile(void *pHandle) {
+  File *f = static_cast<File *>(pHandle);
+  if (f != NULL)
+    f->close();
+}
 
-        // Copy the input to the filename array
-        input.toCharArray(filename, sizeof(filename));
-        Serial.print("Filename updated to: ");
-        Serial.println(filename);
-         Serial.println("Initialize SPIFFS...");
-  if (!SPIFFS.begin(true))
-  {
-    Serial.println("SPIFFS initialization failed!");
-  }
+int32_t GIFReadFile(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen) {
+    int32_t iBytesRead;
+    iBytesRead = iLen;
+    File *f = static_cast<File *>(pFile->fHandle);
+    if ((pFile->iSize - pFile->iPos) < iLen)
+       iBytesRead = pFile->iSize - pFile->iPos - 1;
+    if (iBytesRead <= 0)
+       return 0;
+    iBytesRead = (int32_t)f->read(pBuf, iBytesRead);
+    pFile->iPos = f->position();
+    return iBytesRead;
+}
 
-  // Reformmating the SPIFFS to have space if a large GIF is loaded
-  // You could run out of SPIFFS storage space if you load more than one image or a large GIF
-  // You can also increase the SPIFFS storage space by changing the partition of the ESP32
-  //
-  Serial.println("Formatting SPIFFS...");
-  SPIFFS.format(); // This will erase all the files, change as needed, SPIFFs is non-volatile memory
-  Serial.println("SPIFFS formatted successfully.");
+int32_t GIFSeekFile(GIFFILE *pFile, int32_t iPosition) {
+  File *f = static_cast<File *>(pFile->fHandle);
+  f->seek(iPosition);
+  pFile->iPos = (int32_t)f->position();
+  return pFile->iPos;
+}
 
-  // Open GIF file from SD card
-  Serial.println("Openning GIF file from SD card...");
-  File sdFile = SD.open(filename);
-  if (!sdFile)
-  {
-    Serial.println("Failed to open GIF file from SD card!");
-    return;
-  }
+void GIFDraw(GIFDRAW *pDraw) {
+    uint8_t *s;
+    uint16_t *d, *usPalette, usTemp[320];
+    int x, y, iWidth;
 
-  // Create a file in SPIFFS to store the GIF
-  File spiffsFile = SPIFFS.open(filename, FILE_WRITE, true);
-  if (!spiffsFile)
-  {
-    Serial.println("Failed to copy GIF in SPIFFS!");
-    return;
-  }
+    iWidth = pDraw->iWidth;
+    if (iWidth + pDraw->iX > DISPLAY_WIDTH)
+       iWidth = DISPLAY_WIDTH - pDraw->iX;
+    usPalette = pDraw->pPalette;
+    y = pDraw->iY + pDraw->y;
+    if (y >= DISPLAY_HEIGHT || pDraw->iX >= DISPLAY_WIDTH || iWidth < 1)
+       return;
+    s = pDraw->pPixels;
 
-  // Read the GIF from SD card and write to SPIFFS
-  Serial.println("Copy GIF in SPIFFS...");
-  byte buffer[512];
-  while (sdFile.available())
-  {
-    int bytesRead = sdFile.read(buffer, sizeof(buffer));
-    spiffsFile.write(buffer, bytesRead);
-  }
-
-  spiffsFile.close();
-  sdFile.close();
-
+    if (pDraw->ucDisposalMethod == 2) {
+      for (x=0; x<iWidth; x++) {
+        if (s[x] == pDraw->ucTransparent)
+           s[x] = pDraw->ucBackground;
+      }
+      pDraw->ucHasTransparency = 0;
     }
 
-   
-  if (gif.open(filename, fileOpen, fileClose, fileRead, fileSeek, GIFDraw))
-  {
-    tft.startWrite(); // The TFT chip slect is locked low
-    while (gif.playFrame(true, NULL))
-    {
+    if (pDraw->ucHasTransparency) {
+      uint8_t *pEnd, c, ucTransparent = pDraw->ucTransparent;
+      int x, iCount;
+      pEnd = s + iWidth;
+      x = 0;
+      iCount = 0;
+      while(x < iWidth) {
+        c = ucTransparent-1;
+        d = usTemp;
+        while (c != ucTransparent && s < pEnd) {
+          c = *s++;
+          if (c == ucTransparent) {
+            s--;
+          } else {
+            *d++ = usPalette[c];
+            iCount++;
+          }
+        }
+        if (iCount) {
+          tft.startWrite();
+          tft.setAddrWindow(pDraw->iX+x, y, iCount, 1);
+          tft.pushColors(usTemp, iCount, false);
+          tft.endWrite();
+          x += iCount;
+          iCount = 0;
+        }
+        c = ucTransparent;
+        while (c == ucTransparent && s < pEnd) {
+          c = *s++;
+          if (c == ucTransparent)
+             iCount++;
+          else
+             s--;
+        }
+        if (iCount) {
+          x += iCount;
+          iCount = 0;
+        }
+      }
+    } else {
+      s = pDraw->pPixels;
+      for (x=0; x<iWidth; x++)
+        usTemp[x] = usPalette[*s++];
+      tft.startWrite();
+      tft.setAddrWindow(pDraw->iX, y, iWidth, 1);
+      tft.pushColors(usTemp, iWidth, false);
+      tft.endWrite();
+    }
+}
+
+void setup() {
+  Serial.begin(115200);
+  while (!Serial);
+
+  SPI.begin();
+
+  if(!SD.begin(12)) {
+    Serial.println("SD Card mount failed!");
+    return;
+  } else {
+    Serial.println("SD Card mount succeeded!");
+  }
+
+  tft.init();
+  tft.setRotation(0); // Adjust rotation if necessary
+  tft.fillScreen(TFT_BLACK);
+  gif.begin(LITTLE_ENDIAN_PIXELS);
+}
+
+void loop() {
+  // Check for available serial input
+  if (Serial.available()) {
+    String inputFilename = Serial.readStringUntil('\n'); // Read until newline
+    if (inputFilename.length() > 0) {
+      gifFilename = inputFilename; // Update the filename
+      Serial.printf("GIF filename updated to: %s\n", gifFilename.c_str());
+    }
+  }
+
+  if (gif.open(gifFilename.c_str(), GIFOpenFile, GIFCloseFile, GIFReadFile, GIFSeekFile, GIFDraw)) {
+    GIFINFO gi;
+    Serial.printf("Successfully opened GIF; Canvas size = %d x %d\n", gif.getCanvasWidth(), gif.getCanvasHeight());
+    if (gif.getInfo(&gi)) {
+      Serial.printf("frame count: %d\n", gi.iFrameCount);
+      Serial.printf("duration: %d ms\n", gi.iDuration);
+      Serial.printf("max delay: %d ms\n", gi.iMaxDelay);
+      Serial.printf("min delay: %d ms\n", gi.iMinDelay);
+    }
+    while (gif.playFrame(true, NULL)) {
     }
     gif.close();
-    tft.endWrite(); // Release TFT chip select for the SD Card Reader
+  } else {
+    Serial.printf("Error opening file = %d\n", gif.getLastError());
+    while (1) {}
   }
-}
-
-// Callbacks for file operations for the Animated GIF Lobrary
-void *fileOpen(const char *filename, int32_t *pFileSize)
-{
-  gifFile = SPIFFS.open(filename, FILE_READ);
-  *pFileSize = gifFile.size();
-  if (!gifFile)
-  {
-    Serial.println("Failed to open GIF file from SPIFFS!");
-  }
-  return &gifFile;
-}
-
-void fileClose(void *pHandle)
-{
-  gifFile.close();
-}
-
-int32_t fileRead(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen)
-{
-  int32_t iBytesRead;
-  iBytesRead = iLen;
-  if ((pFile->iSize - pFile->iPos) < iLen)
-    iBytesRead = pFile->iSize - pFile->iPos;
-  if (iBytesRead <= 0)
-    return 0;
-
-  gifFile.seek(pFile->iPos);
-  int32_t bytesRead = gifFile.read(pBuf, iLen);
-  pFile->iPos += iBytesRead;
-
-  return bytesRead;
-}
-
-int32_t fileSeek(GIFFILE *pFile, int32_t iPosition)
-{
-  if (iPosition < 0)
-    iPosition = 0;
-  else if (iPosition >= pFile->iSize)
-    iPosition = pFile->iSize - 1;
-  pFile->iPos = iPosition;
-  gifFile.seek(pFile->iPos);
-  return iPosition;
 }
