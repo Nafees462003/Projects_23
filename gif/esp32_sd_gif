@@ -1,5 +1,5 @@
 #include <AnimatedGIF.h>
-#include <TFT_eSPI.h> // Include the TFT_eSPI library
+#include <TFT_eSPI.h>
 #include <SPI.h>
 #include <SD.h>
 
@@ -25,9 +25,7 @@ void * GIFOpenFile(const char *fname, int32_t *pSize) {
 }
 
 void GIFCloseFile(void *pHandle) {
-  File *f = static_cast<File *>(pHandle);
-  if (f != NULL)
-    f->close();
+  // Don't close the file here to reduce delay
 }
 
 int32_t GIFReadFile(GIFFILE *pFile, uint8_t *pBuf, int32_t iLen) {
@@ -136,9 +134,17 @@ void setup() {
   }
 
   tft.init();
-  tft.setRotation(0); // Adjust rotation if necessary
+  tft.setRotation(2);
   tft.fillScreen(TFT_BLACK);
-  gif.begin(LITTLE_ENDIAN_PIXELS);
+  gif.begin(BIG_ENDIAN_PIXELS);
+  
+  // Load GIF once on startup
+  if (gif.open(gifFilename.c_str(), GIFOpenFile, GIFCloseFile, GIFReadFile, GIFSeekFile, GIFDraw)) {
+    Serial.printf("Successfully opened GIF; Canvas size = %d x %d\n", gif.getCanvasWidth(), gif.getCanvasHeight());
+  } else {
+    Serial.printf("Error opening file = %d\n", gif.getLastError());
+    while (1) {}
+  }
 }
 
 void loop() {
@@ -148,23 +154,22 @@ void loop() {
     if (inputFilename.length() > 0) {
       gifFilename = inputFilename; // Update the filename
       Serial.printf("GIF filename updated to: %s\n", gifFilename.c_str());
+      
+      // Close the existing GIF file
+      gif.close();
+      
+      // Reopen the new GIF file
+      if (gif.open(gifFilename.c_str(), GIFOpenFile, GIFCloseFile, GIFReadFile, GIFSeekFile, GIFDraw)) {
+        Serial.printf("Successfully opened new GIF; Canvas size = %d x %d\n", gif.getCanvasWidth(), gif.getCanvasHeight());
+      } else {
+        Serial.printf("Error opening new file = %d\n", gif.getLastError());
+        while (1) {}
+      }
     }
   }
 
-  if (gif.open(gifFilename.c_str(), GIFOpenFile, GIFCloseFile, GIFReadFile, GIFSeekFile, GIFDraw)) {
-    GIFINFO gi;
-    Serial.printf("Successfully opened GIF; Canvas size = %d x %d\n", gif.getCanvasWidth(), gif.getCanvasHeight());
-    if (gif.getInfo(&gi)) {
-      Serial.printf("frame count: %d\n", gi.iFrameCount);
-      Serial.printf("duration: %d ms\n", gi.iDuration);
-      Serial.printf("max delay: %d ms\n", gi.iMaxDelay);
-      Serial.printf("min delay: %d ms\n", gi.iMinDelay);
-    }
-    while (gif.playFrame(true, NULL)) {
-    }
-    gif.close();
-  } else {
-    Serial.printf("Error opening file = %d\n", gif.getLastError());
-    while (1) {}
+  // Play the GIF continuously
+  while (gif.playFrame(true, NULL)) {
+    // The playFrame method will handle frame playback automatically
   }
 }
